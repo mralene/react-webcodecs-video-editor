@@ -1,0 +1,211 @@
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.error-message {
+  background-color: #fff3f3;
+  border: 1px solid #ffcaca;
+  border-radius: 8px;
+  padding: 1rem;
+  color: #d32f2f;
+  margin: 1rem 0;
+}
+
+.upload-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.upload-label {
+  background-color: #646cff;
+  color: white;
+  padding: 0.6em 1.2em;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.25s;
+}
+
+.upload-label:hover {
+  background-color: #535bf2;
+}
+
+.file-input {
+  display: none;
+}
+
+.video-preview {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.preview-container {
+  position: relative;
+  width: 100%;
+}
+
+.preview-container video,
+.preview-container canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.text-position-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  cursor: crosshair;
+  z-index: 10;
+}
+
+.help-text {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+.text-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.text-input {
+  padding: 0.6em;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.text-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.option-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-input {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.range-input {
+  width: 150px;
+}
+
+.create-button,
+.download-button,
+.action-button {
+  background-color: #646cff;
+  color: white;
+  padding: 0.6em 1.2em;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.25s;
+  font-size: 1rem;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.create-button:hover,
+.download-button:hover,
+.action-button:hover {
+  background-color: #535bf2;
+}
+
+.action-button {
+  background-color: #4caf50;
+}
+
+.action-button:hover {
+  background-color: #45a049;
+}
+
+.create-button:disabled {
+  background-color: #a5a6f6;
+  cursor: not-allowed;
+}
+
+.output-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  background-color: #f8f8ff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.video-controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.progress-bar-container {
+  position: relative;
+  width: 100%;
+  height: 20px;
+  background-color: #eee;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 0.5rem 0;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #646cff;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: bold;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+video {
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
