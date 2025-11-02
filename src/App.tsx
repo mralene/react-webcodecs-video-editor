@@ -55,7 +55,7 @@ function App() {
       // ------------------------------------------------------------
       console.log('DEMUX: Video loaded');
 
-      const response = await fetch(`${window.location.origin}/gopro.MP4`);
+      const response = await fetch(`${window.location.origin}/gopro2.MP4`);
       const videoBlob = await response.blob();
 
       const input = new Input({
@@ -80,45 +80,63 @@ function App() {
       //const canvas = document.getElementById('canvas') as HTMLCanvasElement;
       // const ctx = canvas.getContext('2d');
       // if (!ctx) throw new Error('Canvas context not found');
-      const frames: VideoFrame[] = [];
+
+
+      const BATCH_SIZE = 20;
+      let frameBuffer: VideoFrame[] = [];
+      let processedFrameCount = 0;
+
+      //const frames: VideoFrame[] = [];
       const videoDecoder = new VideoDecoder({
         output: (frame) => {
           //console.log('Got frame at timestamp', frame.timestamp);
           //ctx.drawImage(frame, 0, 0, videoTrack.codedWidth, videoTrack.codedHeight);
-          frames.push(frame.clone());
+          frameBuffer.push(frame.clone());
           frame.close();
+
+          if (frameBuffer.length >= BATCH_SIZE) {
+            processFrameBatch();
+          }
         },
         error: (e) => console.error(e)
       });
-
-      const videoDecoderConfig = await videoTrack.getDecoderConfig();
-      if (!videoDecoderConfig) {
-        throw new Error("Failed to get decoder configuration");
-      }
-      videoDecoder.configure(videoDecoderConfig);
-
-      for await (const packet of videoSink.packets()) {
-        const chunk = await packet.toEncodedVideoChunk();
-        videoDecoder.decode(chunk);
-        //console.log('packet', packet.timestamp, packet.data);
-      }
-      await videoDecoder.flush();
-      console.log(`Decoding finished. Decoded ${frames.length} frames.`);
-
-      // HERE YOU CAN EDIT
-
-      // ------------------------------------------------------------
-      // ENCODE (webcodecs api)
-      // ------------------------------------------------------------
       console.log('Start Encoding');
 
       const encodedChunks: EncodedVideoChunk[] = [];
       const encoder = new VideoEncoder({
         output: (chunk) => {
-          encodedChunks.push(chunk); // collect encoded chunks
+          // Process the chunk immediately instead of storing in array
+          const buffer = new ArrayBuffer(chunk.byteLength);
+          chunk.copyTo(buffer);
+          const encodedPacket = EncodedPacket.fromEncodedChunk(chunk);
+
+          // Add to the muxer directly
+          if (!muxerInitialized) {
+            videoSource.add(encodedPacket, {
+              decoderConfig: {
+                codec: 'vp8',
+                codedWidth: videoTrack.codedWidth,
+                codedHeight: videoTrack.codedHeight,
+              }
+            });
+            muxerInitialized = true;
+          } else {
+            videoSource.add(encodedPacket);
+          }
         },
         error: (e) => console.error('Encoder error:', e),
       });
+
+      // Initialize muxer before encoding
+      const output = new Output({
+        format: new Mp4OutputFormat(),
+        target: new BufferTarget(),
+      });
+
+      const videoSource = new EncodedVideoPacketSource('vp8');
+      output.addVideoTrack(videoSource);
+      await output.start();
+      let muxerInitialized = false;
 
       const fps = (await videoTrack.computePacketStats()).averagePacketRate;
       const bitrate = (await videoTrack.computePacketStats()).averageBitrate;
@@ -133,10 +151,47 @@ function App() {
         framerate: fps,
       });
 
-      for (const frame of frames) {
-        encoder.encode(frame);
-        frame.close(); // free memory now that we encoded
+      async function processFrameBatch() {
+        const currentBatch = [...frameBuffer];
+        frameBuffer = [];
+
+        for (const frame of currentBatch) {
+          encoder.encode(frame);
+          frame.close();
+          processedFrameCount++;
+        }
       }
+
+      console.log(`Decoding finished. Decoded ${processedFrameCount} frames.`);
+
+      const videoDecoderConfig = await videoTrack.getDecoderConfig();
+      if (!videoDecoderConfig) {
+        throw new Error("Failed to get decoder configuration");
+      }
+      videoDecoder.configure(videoDecoderConfig);
+
+      for await (const packet of videoSink.packets()) {
+        const chunk = await packet.toEncodedVideoChunk();
+        videoDecoder.decode(chunk);
+        //console.log('packet', packet.timestamp, packet.data);
+      }
+      await videoDecoder.flush();
+      if (frameBuffer.length > 0) {
+        processFrameBatch();
+      }
+      //console.log(`Decoding finished. Decoded ${frames.length} frames.`);
+
+      // HERE YOU CAN EDIT
+
+      // ------------------------------------------------------------
+      // ENCODE (webcodecs api)
+      // ------------------------------------------------------------
+
+
+      // for (const frame of frames) {
+      //   encoder.encode(frame);
+      //   frame.close(); // free memory now that we encoded
+      // }
 
       await encoder.flush();
       console.log('Encoding finished.');
@@ -146,14 +201,14 @@ function App() {
       // ------------------------------------------------------------
       console.log('Start Muxing');
 
-      const output = new Output({
-        format: new Mp4OutputFormat(),
-        target: new BufferTarget(),
-      });
+      // const output = new Output({
+      //   format: new Mp4OutputFormat(),
+      //   target: new BufferTarget(),
+      // });
 
-      const videoSource = new EncodedVideoPacketSource('vp8');
-      output.addVideoTrack(videoSource);
-      await output.start();
+      //const videoSource = new EncodedVideoPacketSource('vp8');
+      //output.addVideoTrack(videoSource);
+      //await output.start();
 
       let firstChunk = true;
       for (const chunk of encodedChunks) {
