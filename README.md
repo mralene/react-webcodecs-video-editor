@@ -71,3 +71,8 @@ export default defineConfig([
   },
 ])
 ```
+# Marlene's Summary
+
+- don't hold decoded frames in JS memory longer than necessary
+- process frame-by-frame or in very small batches
+- gopro.MP4 codec hevc

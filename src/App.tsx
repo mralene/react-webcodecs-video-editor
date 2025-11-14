@@ -46,212 +46,308 @@ function App() {
   }
 
   // Demux > Decode > Encode > Mux.
+  // const handleCreateVideo = async () => {
+  //   console.log('in create video function');
+
+  //   try {
+  //     // ------------------------------------------------------------
+  //     // DEMUX (mediabunny Input)
+  //     // ------------------------------------------------------------
+  //     console.log('DEMUX: Video loaded');
+
+  //     const response = await fetch(`${window.location.origin}/gopro.MP4`);
+  //     const videoBlob = await response.blob();
+
+  //     const input = new Input({
+  //       source: new BlobSource(videoBlob),
+  //       formats: ALL_FORMATS,
+  //     });
+
+  //     const duration = await input.computeDuration(); // maximum end timespamp across all tracks
+  //     const videoTrack = await input.getPrimaryVideoTrack();
+  //     if (!videoTrack) throw new Error('No video track found');
+
+  //     console.log('duration', duration);
+  //     console.log('codec', videoTrack.codec);
+
+  //     const videoSink = new EncodedPacketSink(videoTrack);
+
+
+  //     // ------------------------------------------------------------
+  //     // DECODE (webcodecs api)
+  //     // ------------------------------------------------------------
+  //     console.log('Start Decoding');
+  //     //const canvas = document.getElementById('canvas') as HTMLCanvasElement;
+  //     // const ctx = canvas.getContext('2d');
+  //     // if (!ctx) throw new Error('Canvas context not found');
+
+
+  //     const BATCH_SIZE = 20;
+  //     let frameBuffer: VideoFrame[] = [];
+  //     let processedFrameCount = 0;
+
+  //     //const frames: VideoFrame[] = [];
+  //     const videoDecoder = new VideoDecoder({
+  //       output: (frame) => {
+  //         //console.log('Got frame at timestamp', frame.timestamp);
+  //         //ctx.drawImage(frame, 0, 0, videoTrack.codedWidth, videoTrack.codedHeight);
+  //         frameBuffer.push(frame.clone());
+  //         frame.close();
+
+  //         if (frameBuffer.length >= BATCH_SIZE) {
+  //           processFrameBatch();
+  //         }
+  //       },
+  //       error: (e) => console.error(e)
+  //     });
+  //     console.log('Start Encoding');
+
+  //     const encodedChunks: EncodedVideoChunk[] = [];
+  //     const encoder = new VideoEncoder({
+  //       output: (chunk) => {
+  //         // Process the chunk immediately instead of storing in array
+  //         const buffer = new ArrayBuffer(chunk.byteLength);
+  //         chunk.copyTo(buffer);
+  //         const encodedPacket = EncodedPacket.fromEncodedChunk(chunk);
+
+  //         // Add to the muxer directly
+  //         if (!muxerInitialized) {
+  //           videoSource.add(encodedPacket, {
+  //             decoderConfig: {
+  //               codec: 'vp8',
+  //               codedWidth: videoTrack.codedWidth,
+  //               codedHeight: videoTrack.codedHeight,
+  //             }
+  //           });
+  //           muxerInitialized = true;
+  //         } else {
+  //           videoSource.add(encodedPacket);
+  //         }
+  //       },
+  //       error: (e) => console.error('Encoder error:', e),
+  //     });
+
+  //     // Initialize muxer before encoding
+  //     const output = new Output({
+  //       format: new Mp4OutputFormat(),
+  //       target: new BufferTarget(),
+  //     });
+
+  //     const videoSource = new EncodedVideoPacketSource('vp8');
+  //     output.addVideoTrack(videoSource);
+  //     await output.start();
+  //     let muxerInitialized = false;
+
+  //     const fps = (await videoTrack.computePacketStats()).averagePacketRate;
+  //     const bitrate = (await videoTrack.computePacketStats()).averageBitrate;
+
+  //     console.log('fps', fps);
+  //     console.log('bitrate', bitrate);
+
+  //     encoder.configure({
+  //       codec: 'vp8', // or 'avc1.42E028', 'avc1.42E01E' for H.264, vp8
+  //       width: videoTrack.codedWidth,
+  //       height: videoTrack.codedHeight,
+  //       framerate: fps,
+  //     });
+
+  //     async function processFrameBatch() {
+  //       const currentBatch = [...frameBuffer];
+  //       frameBuffer = [];
+
+  //       for (const frame of currentBatch) {
+  //         encoder.encode(frame);
+  //         frame.close();
+  //         processedFrameCount++;
+  //       }
+  //     }
+
+  //     console.log(`Decoding finished. Decoded ${processedFrameCount} frames.`);
+
+  //     const videoDecoderConfig = await videoTrack.getDecoderConfig();
+  //     if (!videoDecoderConfig) {
+  //       throw new Error("Failed to get decoder configuration");
+  //     }
+  //     videoDecoder.configure(videoDecoderConfig);
+
+  //     for await (const packet of videoSink.packets()) {
+  //       const chunk = await packet.toEncodedVideoChunk();
+  //       videoDecoder.decode(chunk);
+  //       //console.log('packet', packet.timestamp, packet.data);
+  //     }
+  //     await videoDecoder.flush();
+  //     if (frameBuffer.length > 0) {
+  //       processFrameBatch();
+  //     }
+  //     //console.log(`Decoding finished. Decoded ${frames.length} frames.`);
+
+  //     // HERE YOU CAN EDIT
+
+  //     // ------------------------------------------------------------
+  //     // ENCODE (webcodecs api)
+  //     // ------------------------------------------------------------
+
+
+  //     // for (const frame of frames) {
+  //     //   encoder.encode(frame);
+  //     //   frame.close(); // free memory now that we encoded
+  //     // }
+
+  //     await encoder.flush();
+  //     console.log('Encoding finished.');
+
+  //     // ------------------------------------------------------------
+  //     // MUX (mediabunny Output)
+  //     // ------------------------------------------------------------
+  //     console.log('Start Muxing');
+
+  //     // const output = new Output({
+  //     //   format: new Mp4OutputFormat(),
+  //     //   target: new BufferTarget(),
+  //     // });
+
+  //     //const videoSource = new EncodedVideoPacketSource('vp8');
+  //     //output.addVideoTrack(videoSource);
+  //     //await output.start();
+
+  //     let firstChunk = true;
+  //     for (const chunk of encodedChunks) {
+  //       // Get raw bytes
+  //       const buffer = new ArrayBuffer(chunk.byteLength);
+  //       chunk.copyTo(buffer);
+  //       const encodedPacket = EncodedPacket.fromEncodedChunk(chunk);
+
+  //       // Add packet
+  //       if (firstChunk) {
+  //         videoSource.add(encodedPacket, {
+  //           decoderConfig: {
+  //             codec: 'vp8', //'avc1.42001E',
+  //             codedWidth: videoTrack.codedWidth,
+  //             codedHeight: videoTrack.codedHeight,
+  //           }
+  //         });
+  //         firstChunk = false;
+  //       } else {
+  //         //console.log('Added packet', encodedPacket.timestamp);
+  //         //console.log('Encoded packet', encodedPacket.timestamp);
+  //         videoSource.add(encodedPacket);
+  //       }
+  //     }
+  //     await output.finalize();
+  //     console.log('Muxing finished');
+
+  //     const buffer = output.target.buffer;
+  //     if (!buffer) throw new Error('Buffer not found');
+  //     const blob = new Blob([buffer], { type: 'video/mp4' });
+
+  //     console.log('Output video created successfully');
+
+  //     setOutputBlob(blob);
+  //     setOutputUrl(URL.createObjectURL(blob));
+  //     setProcessing(false);
+  //     setProgress(100);
+
+
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //   }
+  // };
+
+
+
   const handleCreateVideo = async () => {
-    console.log('in create video function');
+    setProcessing(true);
+    setProgress(0);
+    setErrorMessage(null);
 
     try {
-      // ------------------------------------------------------------
-      // DEMUX (mediabunny Input)
-      // ------------------------------------------------------------
-      console.log('DEMUX: Video loaded');
+      // Create a worker
+      const worker = new Worker(
+        new URL('./workers/video-processor.worker.ts', import.meta.url),
+        { type: 'module' });
 
-      const response = await fetch(`${window.location.origin}/gopro2.MP4`);
-      const videoBlob = await response.blob();
+      // Set up message handling from the worker
+      worker.onmessage = (e) => {
+        const { type, progress, result, error } = e.data;
 
-      const input = new Input({
-        source: new BlobSource(videoBlob),
-        formats: ALL_FORMATS,
-      });
+        switch (type) {
+          case 'ready':
+            console.log('Worker is ready');
+            // Start processing when worker is ready
 
-      const duration = await input.computeDuration(); // maximum end timespamp across all tracks
-      const videoTrack = await input.getPrimaryVideoTrack();
-      if (!videoTrack) throw new Error('No video track found');
+            startProcessing(worker);
+            break;
 
-      console.log('duration', duration);
-      console.log('codec', videoTrack.codec);
+          case 'progress':
+            setProgress(progress);
+            break;
 
-      const videoSink = new EncodedPacketSink(videoTrack);
-
-
-      // ------------------------------------------------------------
-      // DECODE (webcodecs api)
-      // ------------------------------------------------------------
-      console.log('Start Decoding');
-      //const canvas = document.getElementById('canvas') as HTMLCanvasElement;
-      // const ctx = canvas.getContext('2d');
-      // if (!ctx) throw new Error('Canvas context not found');
-
-
-      const BATCH_SIZE = 20;
-      let frameBuffer: VideoFrame[] = [];
-      let processedFrameCount = 0;
-
-      //const frames: VideoFrame[] = [];
-      const videoDecoder = new VideoDecoder({
-        output: (frame) => {
-          //console.log('Got frame at timestamp', frame.timestamp);
-          //ctx.drawImage(frame, 0, 0, videoTrack.codedWidth, videoTrack.codedHeight);
-          frameBuffer.push(frame.clone());
-          frame.close();
-
-          if (frameBuffer.length >= BATCH_SIZE) {
-            processFrameBatch();
-          }
-        },
-        error: (e) => console.error(e)
-      });
-      console.log('Start Encoding');
-
-      const encodedChunks: EncodedVideoChunk[] = [];
-      const encoder = new VideoEncoder({
-        output: (chunk) => {
-          // Process the chunk immediately instead of storing in array
-          const buffer = new ArrayBuffer(chunk.byteLength);
-          chunk.copyTo(buffer);
-          const encodedPacket = EncodedPacket.fromEncodedChunk(chunk);
-
-          // Add to the muxer directly
-          if (!muxerInitialized) {
-            videoSource.add(encodedPacket, {
-              decoderConfig: {
-                codec: 'vp8',
-                codedWidth: videoTrack.codedWidth,
-                codedHeight: videoTrack.codedHeight,
-              }
-            });
-            muxerInitialized = true;
-          } else {
-            videoSource.add(encodedPacket);
-          }
-        },
-        error: (e) => console.error('Encoder error:', e),
-      });
-
-      // Initialize muxer before encoding
-      const output = new Output({
-        format: new Mp4OutputFormat(),
-        target: new BufferTarget(),
-      });
-
-      const videoSource = new EncodedVideoPacketSource('vp8');
-      output.addVideoTrack(videoSource);
-      await output.start();
-      let muxerInitialized = false;
-
-      const fps = (await videoTrack.computePacketStats()).averagePacketRate;
-      const bitrate = (await videoTrack.computePacketStats()).averageBitrate;
-
-      console.log('fps', fps);
-      console.log('bitrate', bitrate);
-
-      encoder.configure({
-        codec: 'vp8', // or 'avc1.42E028', 'avc1.42E01E' for H.264, vp8
-        width: videoTrack.codedWidth,
-        height: videoTrack.codedHeight,
-        framerate: fps,
-      });
-
-      async function processFrameBatch() {
-        const currentBatch = [...frameBuffer];
-        frameBuffer = [];
-
-        for (const frame of currentBatch) {
-          encoder.encode(frame);
-          frame.close();
-          processedFrameCount++;
-        }
-      }
-
-      console.log(`Decoding finished. Decoded ${processedFrameCount} frames.`);
-
-      const videoDecoderConfig = await videoTrack.getDecoderConfig();
-      if (!videoDecoderConfig) {
-        throw new Error("Failed to get decoder configuration");
-      }
-      videoDecoder.configure(videoDecoderConfig);
-
-      for await (const packet of videoSink.packets()) {
-        const chunk = await packet.toEncodedVideoChunk();
-        videoDecoder.decode(chunk);
-        //console.log('packet', packet.timestamp, packet.data);
-      }
-      await videoDecoder.flush();
-      if (frameBuffer.length > 0) {
-        processFrameBatch();
-      }
-      //console.log(`Decoding finished. Decoded ${frames.length} frames.`);
-
-      // HERE YOU CAN EDIT
-
-      // ------------------------------------------------------------
-      // ENCODE (webcodecs api)
-      // ------------------------------------------------------------
-
-
-      // for (const frame of frames) {
-      //   encoder.encode(frame);
-      //   frame.close(); // free memory now that we encoded
-      // }
-
-      await encoder.flush();
-      console.log('Encoding finished.');
-
-      // ------------------------------------------------------------
-      // MUX (mediabunny Output)
-      // ------------------------------------------------------------
-      console.log('Start Muxing');
-
-      // const output = new Output({
-      //   format: new Mp4OutputFormat(),
-      //   target: new BufferTarget(),
-      // });
-
-      //const videoSource = new EncodedVideoPacketSource('vp8');
-      //output.addVideoTrack(videoSource);
-      //await output.start();
-
-      let firstChunk = true;
-      for (const chunk of encodedChunks) {
-        // Get raw bytes
-        const buffer = new ArrayBuffer(chunk.byteLength);
-        chunk.copyTo(buffer);
-        const encodedPacket = EncodedPacket.fromEncodedChunk(chunk);
-
-        // Add packet
-        if (firstChunk) {
-          videoSource.add(encodedPacket, {
-            decoderConfig: {
-              codec: 'vp8', //'avc1.42001E',
-              codedWidth: videoTrack.codedWidth,
-              codedHeight: videoTrack.codedHeight,
+          case 'complete':
+            console.log('Processing complete:', result);
+            if (e.data.blob) {
+              setOutputBlob(e.data.blob);
+              setOutputUrl(URL.createObjectURL(e.data.blob));
             }
-          });
-          firstChunk = false;
-        } else {
-          //console.log('Added packet', encodedPacket.timestamp);
-          //console.log('Encoded packet', encodedPacket.timestamp);
-          videoSource.add(encodedPacket);
+            setProcessing(false);
+            setProgress(100);
+            worker.terminate();
+            break;
+
+          case 'error':
+            console.error('Worker error:', error);
+            setErrorMessage(error);
+            setProcessing(false);
+            worker.terminate();
+            break;
         }
-      }
-      await output.finalize();
-      console.log('Muxing finished');
+      };
 
-      const buffer = output.target.buffer;
-      if (!buffer) throw new Error('Buffer not found');
-      const blob = new Blob([buffer], { type: 'video/mp4' });
-
-      console.log('Output video created successfully');
-
-      setOutputBlob(blob);
-      setOutputUrl(URL.createObjectURL(blob));
-      setProcessing(false);
-      setProgress(100);
-
-
+      // Handle worker errors
+      worker.onerror = (error) => {
+        console.error('Worker error:', error);
+        setErrorMessage(`Worker error: ${error.message}`);
+        setProcessing(false);
+      };
     } catch (error) {
       console.error('Error:', error);
+      setErrorMessage(error instanceof Error ? error.message : String(error));
+      setProcessing(false);
     }
-  };
+  }
+
+  // Function to start processing
+  function startProcessing(worker: Worker) {
+    if (videoFile) {
+      console.log('Sending video file to worker:', videoFile.name);
+      // Send the file directly to the worker
+      worker.postMessage({
+        type: 'process',
+        file: videoFile
+      });
+    } else {
+      console.warn('No video file selected, using default');
+      // Use the default video if no file is selected
+      worker.postMessage({
+        type: 'process',
+        file: null
+      });
+    }
+  }
+
+
+  // Function to handle processing completion
+  function handleProcessingComplete(result: string, blob?: Blob) {
+    // Handle the result
+
+    if (blob) {
+      setOutputBlob(blob);
+      setOutputUrl(URL.createObjectURL(blob));
+    }
+    console.log('Processing complete:', result);
+    setProcessing(false);
+    setProgress(100);
+  }
+
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     if (!canvasRef.current) return
